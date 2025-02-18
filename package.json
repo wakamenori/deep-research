@@ -16,6 +16,7 @@
     "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^22.13.0",
+    "dotenv": "^16.4.7",
     "prettier": "^3.4.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",

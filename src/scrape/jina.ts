@@ -17,6 +17,9 @@ export const scrapeUrlWithJinaReader = async (
 	timeout?: number,
 ) => {
 	const token = process.env.JINA_API_KEY;
+	if (!token) {
+		throw new Error("JINA_API_KEY is not set");
+	}
 
 	try {
 		const response = await fetch("https://r.jina.ai/", {

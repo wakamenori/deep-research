@@ -48,7 +48,7 @@ export async function search(
 
 		return {
 			success: true,
-			data: results,
+			data: results.filter((result) => result.markdown.length > 0),
 		};
 	} catch (error) {
 		console.error("Search failed:", error);
