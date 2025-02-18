@@ -1,18 +1,18 @@
-import FirecrawlApp, { SearchResponse } from '@mendable/firecrawl-js';
+import FirecrawlApp, { type SearchResponse } from '@mendable/firecrawl-js';
 import { generateObject } from 'ai';
 import { compact } from 'lodash-es';
 import pLimit from 'p-limit';
 import { z } from 'zod';
 
 import { o3MiniModel, trimPrompt } from './ai/providers';
-import { systemPrompt } from './prompt';
 import { OutputManager } from './output-manager';
+import { systemPrompt } from './prompt';
 
 // Initialize output manager for coordinated console/progress output
 const output = new OutputManager();
 
 // Replace console.log with output.log
-function log(...args: any[]) {
+function log(...args: Parameters<typeof console.log>) {
   output.log(...args);
 }
 
@@ -78,10 +78,7 @@ async function generateSerpQueries({
         .describe(`List of SERP queries, max of ${numQueries}`),
     }),
   });
-  log(
-    `Created ${res.object.queries.length} queries`,
-    res.object.queries,
-  );
+  log(`Created ${res.object.queries.length} queries`, res.object.queries);
 
   return res.object.queries.slice(0, numQueries);
 }
@@ -120,10 +117,7 @@ async function processSerpResult({
         ),
     }),
   });
-  log(
-    `Created ${res.object.learnings.length} learnings`,
-    res.object.learnings,
-  );
+  log(`Created ${res.object.learnings.length} learnings`, res.object.learnings);
 
   return res.object;
 }
@@ -183,7 +177,7 @@ export async function deepResearch({
     totalQueries: 0,
     completedQueries: 0,
   };
-  
+
   const reportProgress = (update: Partial<ResearchProgress>) => {
     Object.assign(progress, update);
     onProgress?.(progress);
@@ -194,12 +188,12 @@ export async function deepResearch({
     learnings,
     numQueries: breadth,
   });
-  
+
   reportProgress({
     totalQueries: serpQueries.length,
-    currentQuery: serpQueries[0]?.query
+    currentQuery: serpQueries[0]?.query,
   });
-  
+
   const limit = pLimit(ConcurrencyLimit);
 
   const results = await Promise.all(
@@ -250,23 +244,19 @@ export async function deepResearch({
               visitedUrls: allUrls,
               onProgress,
             });
-          } else {
-            reportProgress({
-              currentDepth: 0,
-              completedQueries: progress.completedQueries + 1,
-              currentQuery: serpQuery.query,
-            });
-            return {
-              learnings: allLearnings,
-              visitedUrls: allUrls,
-            };
           }
-        } catch (e: any) {
-          if (e.message && e.message.includes('Timeout')) {
-            log(
-              `Timeout error running query: ${serpQuery.query}: `,
-              e,
-            );
+          reportProgress({
+            currentDepth: 0,
+            completedQueries: progress.completedQueries + 1,
+            currentQuery: serpQuery.query,
+          });
+          return {
+            learnings: allLearnings,
+            visitedUrls: allUrls,
+          };
+        } catch (e: unknown) {
+          if (e instanceof Error && e.message?.includes('Timeout')) {
+            log(`Timeout error running query: ${serpQuery.query}: `, e);
           } else {
             log(`Error running query: ${serpQuery.query}: `, e);
           }

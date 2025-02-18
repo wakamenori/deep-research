@@ -22,7 +22,10 @@ abstract class TextSplitter implements TextSplitterParams {
     const documents: string[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const text = texts[i];
-      for (const chunk of this.splitText(text!)) {
+      if (!text) {
+        continue;
+      }
+      for (const chunk of this.splitText(text)) {
         documents.push(chunk);
       }
     }
@@ -63,7 +66,9 @@ which is longer than the specified ${this.chunkSize}`,
             total > this.chunkOverlap ||
             (total + _len > this.chunkSize && total > 0)
           ) {
-            total -= currentDoc[0]!.length;
+            const firstDoc = currentDoc[0];
+            if (!firstDoc) break; // 安全のため、undefined チェックを追加
+            total -= firstDoc.length;
             currentDoc.shift();
           }
         }
@@ -99,7 +104,8 @@ export class RecursiveCharacterTextSplitter
     const finalChunks: string[] = [];
 
     // Get appropriate separator to use
-    let separator: string = this.separators[this.separators.length - 1]!;
+    const lastSeparator = this.separators[this.separators.length - 1];
+    let separator: string = lastSeparator ?? ''; // デフォルト値として空文字を設定
     for (const s of this.separators) {
       if (s === '') {
         separator = s;

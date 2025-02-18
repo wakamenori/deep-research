@@ -1,5 +1,5 @@
-import * as fs from 'fs/promises';
-import * as readline from 'readline';
+import * as fs from 'node:fs/promises';
+import * as readline from 'node:readline';
 
 import { deepResearch, writeFinalReport } from './deep-research';
 import { generateFeedback } from './feedback';
@@ -8,7 +8,7 @@ import { OutputManager } from './output-manager';
 const output = new OutputManager();
 
 // Helper function for consistent logging
-function log(...args: any[]) {
+function log(...args: Parameters<typeof output.log>) {
   output.log(...args);
 }
 
@@ -33,19 +33,19 @@ async function run() {
 
   // Get breath and depth parameters
   const breadth =
-    parseInt(
+    Number.parseInt(
       await askQuestion(
         'Enter research breadth (recommended 2-10, default 4): ',
       ),
       10,
     ) || 4;
   const depth =
-    parseInt(
+    Number.parseInt(
       await askQuestion('Enter research depth (recommended 1-5, default 2): '),
       10,
     ) || 2;
 
-  log(`Creating research plan...`);
+  log('Creating research plan...');
 
   // Generate follow-up questions
   const followUpQuestions = await generateFeedback({
@@ -73,20 +73,18 @@ ${followUpQuestions.map((q: string, i: number) => `Q: ${q}\nA: ${answers[i]}`).j
   log('\nResearching your topic...');
 
   log('\nStarting research with progress tracking...\n');
-  
+
   const { learnings, visitedUrls } = await deepResearch({
     query: combinedQuery,
     breadth,
     depth,
-    onProgress: (progress) => {
+    onProgress: progress => {
       output.updateProgress(progress);
     },
   });
 
   log(`\n\nLearnings:\n\n${learnings.join('\n')}`);
-  log(
-    `\n\nVisited URLs (${visitedUrls.length}):\n\n${visitedUrls.join('\n')}`,
-  );
+  log(`\n\nVisited URLs (${visitedUrls.length}):\n\n${visitedUrls.join('\n')}`);
   log('Writing final report...');
 
   const report = await writeFinalReport({
